@@ -2,6 +2,8 @@ import { View, Text } from "react-native";
 import { ScaleLinear } from "d3-scale";
 import { Line, Rect } from "react-native-svg";
 
+const MARGIN = 2;
+
 export interface Candle {
   date: string;
   day: number;
@@ -13,36 +15,34 @@ export interface Candle {
 
 export interface CandleProps {
   candle: Candle;
-  caliber: number;
+  index: number;
+  width: number;
   scaleY: ScaleLinear<number, number>;
   scaleBody: ScaleLinear<number, number>;
-  index: number;
 }
 
-const Candle = ({
-  candle: { low, high, open, close },
-  caliber,
-  scaleY,
-  scaleBody,
-  index,
-}: CandleProps) => {
-  const x = caliber * index + 0.5 * caliber;
-  const color = open > close ? "#4AFA9A" : "E33F64";
+const Candle = ({ candle, index, width, scaleY, scaleBody }: CandleProps) => {
+  const { close, open, high, low } = candle;
+  const fill = close > open ? "#4AFA9A" : "#E33F64";
+  const x = index * width;
+  const max = Math.max(open, close);
+  const min = Math.min(open, close);
   return (
     <>
       <Line
-        x1={x}
-        x2={x}
-        y1={scaleY(high)}
-        y2={scaleY(low)}
-        stroke={color}
+        x1={x + width / 2}
+        y1={scaleY(low)}
+        x2={x + width / 2}
+        y2={scaleY(high)}
+        stroke={fill}
         strokeWidth={1}
       />
       <Rect
-        x={0}
-        y={scaleY(Math.max(open, close))}
-        width={caliber}
-        height={scaleBody(Math.max(open, close) - Math.min(open, close))}
+        x={x + MARGIN}
+        y={scaleY(max)}
+        width={width - MARGIN * 2}
+        height={scaleBody(max - min)}
+        {...{ fill }}
       />
     </>
   );

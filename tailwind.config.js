@@ -32,6 +32,11 @@ module.exports = {
   //     },
   //   },
   // },
+  theme: {
+    fontSize: {
+      sm: "6px",
+    }
+  },
   plugins: [],
 };
 

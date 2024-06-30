@@ -1,5 +1,6 @@
 import { Redirect } from "expo-router";
-import { Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView, Text, View } from "react-native";
 
 export default function Index() {
   // const { loading, isLogged } = useGlobalContext();
@@ -9,11 +10,14 @@ export default function Index() {
   if (!loading && isLogged) return <Redirect href="/home" />;
 
   return (
-    <View
-      className="w-full justify-center items-center h-full"
-    >
-      <Text>Edit app/index.tsx to.</Text>
+    <SafeAreaView>
+      <View
+        className="w-full justify-center items-center h-full"
+      >
+        <Text>Edit app/index.tsx to.</Text>
 
-    </View>
+      </View>
+      <StatusBar backgroundColor="#161622" style="light" />
+    </SafeAreaView>
   );
 }
