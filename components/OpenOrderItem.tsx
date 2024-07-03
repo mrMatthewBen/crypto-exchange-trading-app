@@ -2,7 +2,13 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import { OpenOrder } from "@/types/ProfileType";
 
-const OpenOrderItem = ({ ticker, price, amount }: OpenOrder) => {
+interface props {
+  ticker: string;
+  price: number;
+  amount: number;
+}
+
+const OpenOrderItem = ({ ticker, price, amount }: props) => {
   return (
     <View style={styles.outerContainer}>
       <View style={styles.innerContainer}>

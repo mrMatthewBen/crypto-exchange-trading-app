@@ -11,9 +11,7 @@ export default function Index() {
 
   return (
     <SafeAreaView>
-      <View
-        className="w-full justify-center items-center h-full"
-      >
+      <View>
         <Text>Edit app/index.tsx to.</Text>
 
       </View>

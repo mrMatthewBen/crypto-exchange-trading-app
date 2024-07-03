@@ -36,10 +36,18 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
 
   const { state, dispatch } = context;
 
-  const availableUsdAmount =
-    state.cryptoAssets?.find((asset) => asset.ticker === "USDT")?.total || 0;
   const ticker = state.selectedCrypto;
   const cryptoName = formatCryptoNameOnly(ticker);
+  const availableUsdAmount =
+    state.cryptoAssets?.find((asset) => asset.ticker === "USDT")?.total || 0;
+    const selectedCrypto =  state.cryptoAssets?.find((asset) => asset.ticker === ticker)
+  const availableSelectedCryptoAmount = selectedCrypto?.amount || 0;
+  const availableSelectedCryptoTotal = selectedCrypto?.total || 0;
+
+  console.log(state.openOrders, "openOrder", {
+    availableSelectedCryptoAmount,
+    ticker,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,8 +71,9 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
   useEffect(() => {
     setPrice(copiedPrice);
 
-    const newTotalAmountCopied = parseFloat(copiedPrice) * parseFloat(cryptoAmount)
-    setTotalAmount(newTotalAmountCopied.toString())
+    const newTotalAmountCopied =
+      parseFloat(copiedPrice) * parseFloat(cryptoAmount);
+    setTotalAmount(newTotalAmountCopied.toString());
   }, [copiedPrice]);
 
   useEffect(() => {
@@ -137,31 +146,45 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
   };
 
   const handleCryptoBuySell = () => {
+    const isAmountInvalid = (amount: string, availableAmount: number): boolean =>
+      parseFloat(amount) > availableAmount || parseFloat(amount) === 0 || amount === "";
+  
+    const showAlertForInvalidAmount = (amount: string, availableAmount: number) => {
+      if (parseFloat(amount) > availableAmount) {
+        showInsufficientAlert();
+      } else if (parseFloat(amount) === 0 || amount === "") {
+        showAmountNotInputtedAlert();
+      }
+    };
+  
+    const processOrder = (updatedCryptoAmount: number, updatedCryptoTotal: number, type: "buy" | "sell", tickerOrder: string) => {
+      dispatch({
+        type: "ADD_OPEN_ORDER",
+        payload: { ticker, price, amount: cryptoAmount, total: totalAmount, type },
+      });
+      dispatch({
+        type: "UPDATE_CRYPTO_AMOUNT",
+        payload: { name: formatCryptoNameOnly(tickerOrder), ticker: tickerOrder, amount: updatedCryptoAmount, total: updatedCryptoTotal },
+      });
+      setTotalAmount("");
+      setCryptoAmount("");
+    };
+  
     if (isBuyToggle) {
-      const totalAmountNum = parseFloat(totalAmount)
-      if (totalAmountNum > availableUsdAmount) showInsufficientAlert();
-      if (totalAmountNum === 0 || totalAmount === "") showAmountNotInputtedAlert();
-      else {
-        const updatedUsdtAmount = availableUsdAmount - parseFloat(totalAmount);
-        dispatch({
-          type: "ADD_OPEN_ORDER",
-          payload: {
-            ticker,
-            price,
-            amount: cryptoAmount,
-          },
-        });
-        dispatch({
-          type: "UPDATE_USDT_AMOUNT",
-          payload: {
-            name: "USDT Tether",
-            ticker: "USDT",
-            amount: updatedUsdtAmount,
-            total: updatedUsdtAmount,
-          },
-        });
-        setTotalAmount("");
-        setCryptoAmount("");
+      if (isAmountInvalid(totalAmount, availableUsdAmount)) {
+        showAlertForInvalidAmount(totalAmount, availableUsdAmount);
+      } else {
+        const updatedCryptoAmount = availableUsdAmount - parseFloat(totalAmount);
+        // console.log({updatedCryptoAmount})
+        processOrder(updatedCryptoAmount, updatedCryptoAmount, "buy", "USDT");
+      }
+    } else {
+      if (isAmountInvalid(cryptoAmount, availableSelectedCryptoAmount)) {
+        showAlertForInvalidAmount(cryptoAmount, availableSelectedCryptoAmount);
+      } else {
+        const updatedCryptoAmount = availableSelectedCryptoAmount - parseFloat(cryptoAmount);
+        const updatedCryptoTotal = availableSelectedCryptoTotal - parseFloat(totalAmount);
+        processOrder(updatedCryptoAmount, updatedCryptoTotal, "sell", ticker);
       }
     }
   };
@@ -238,10 +261,19 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
             />
           </View>
         </View>
-        <View>{/* TODO: create percentage picker */}</View>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={styles.smallFont}>Available</Text>
-          <Text style={styles.smallFont}>{formatUSD(availableUsdAmount)}</Text>
+          {isBuyToggle ? (
+            <Text style={styles.smallFont}>
+              {formatUSD(availableUsdAmount)}
+            </Text>
+          ) : (
+            <Text
+              style={styles.smallFont}
+            >{`${availableSelectedCryptoAmount} ${formatCryptoNameOnly(
+              ticker
+            )}`}</Text>
+          )}
         </View>
       </View>
       <TouchableOpacity onPress={handleCryptoBuySell}>

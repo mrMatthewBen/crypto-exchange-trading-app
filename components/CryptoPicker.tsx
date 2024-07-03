@@ -1,6 +1,13 @@
-import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  Image,
+} from "react-native";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Modal from "react-native-modal";
+import { icons } from "@/constants";
 
 interface props {
   name: string;
@@ -33,9 +40,17 @@ const CryptoPicker = ({ name, onTickerChange }: props) => {
 
   return (
     <View style={style.container}>
-      <TouchableWithoutFeedback onPress={toggleModal}>
-        <Text style={{ color: "white" }}>{name}</Text>
-      </TouchableWithoutFeedback>
+      <View style={style.cryptoPickerTitleSection}>
+        <TouchableWithoutFeedback onPress={toggleModal}>
+          <Text style={{ color: "white" }}>{name}</Text>
+        </TouchableWithoutFeedback>
+        <Image
+            source={icons.arrowDown}
+            resizeMode="contain"
+            tintColor="#F5F5F5"
+            style={style.imageIcon}
+          />
+      </View>
       <Modal
         style={style.bottomModalView}
         isVisible={isModalVisible}
@@ -61,6 +76,12 @@ const style = StyleSheet.create({
   container: {
     padding: 10,
   },
+  cryptoPickerTitleSection: {
+    flexDirection: "row", 
+    alignItems: "center", 
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+  },
   bottomModalView: {
     justifyContent: "flex-end",
     margin: 0,
@@ -76,6 +97,10 @@ const style = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
   },
+  imageIcon: {
+    width: 24,
+    height: 24,
+  }
 });
 
 export default CryptoPicker;

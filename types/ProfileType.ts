@@ -1,3 +1,5 @@
+type OpenOrderType = "buy" | "sell";
+
 interface CryptoAsset {
   name: string;
   ticker: string;
@@ -9,6 +11,8 @@ interface OpenOrder {
   ticker: string;
   price: number;
   amount: number;
+  total: number;
+  type: OpenOrderType;
 }
 
 interface CryptoState {

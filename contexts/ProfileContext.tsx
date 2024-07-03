@@ -18,7 +18,7 @@ interface Action {
   type:
     | "SET_CRYPTO_ASSETS"
     | "ADD_CRYPTO_ASSET"
-    | "UPDATE_USDT_AMOUNT"
+    | "UPDATE_CRYPTO_AMOUNT"
     | "SET_USD_BALANCE"
     | "SET_OPEN_ORDERS"
     | "ADD_OPEN_ORDER"
@@ -33,11 +33,10 @@ const initialState: CryptoState = {
     {
       name: "USDT Tether",
       ticker: "USDT",
-      amount: 10,
-      total: 10,
+      amount: 100000,
+      total: 100000,
     },
   ],
-  // cryptoAssets: [],
   openOrders: [],
   usdBalance: 0,
 };
@@ -53,7 +52,7 @@ const reducer = (state: CryptoState, action: Action): CryptoState => {
         ...state,
         cryptoAssets: mergeSummaries(action.payload, state.cryptoAssets),
       };
-    case "UPDATE_USDT_AMOUNT":
+    case "UPDATE_CRYPTO_AMOUNT":
       return {
         ...state,
         cryptoAssets: [...state.cryptoAssets, action.payload].reduce((acc, current) => {

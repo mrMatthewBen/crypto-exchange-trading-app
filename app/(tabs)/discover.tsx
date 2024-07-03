@@ -1,11 +1,10 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { Text, SafeAreaView } from 'react-native'
 
 const Discover = () => {
   return (
-    <View>
-      <Text>Discover</Text>
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f0f0f" }}>
+      <Text style={{ color: "white" }}>Discover</Text>
+    </SafeAreaView>
   )
 }
 

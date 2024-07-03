@@ -21,21 +21,19 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
   const { state } = context;
 
   const selectedTicker = state.selectedCrypto.toLowerCase();
+  const emptyOrderItems = Array.from({ length: 7 }, () => ["0", "0"])
 
   const [orderBook, setOrderBook] = useState<{
     bids: string[][];
     asks: string[][];
-  }>({ bids: [], asks: [] });
+  }>({ bids: emptyOrderItems, asks: emptyOrderItems });
   const [priceData, setPriceData] = useState<{
     price: string;
     color: string;
   }>({ price: "", color: "black" });
-  const [priceChangeData, setPriceChangeData] = useState<number>(0);
 
   const orderBookWsRef = useRef<WebSocket | null>(null);
   const priceWsRef = useRef<WebSocket | null>(null);
-
-  console.log({selectedTicker, orderBook, priceData})
 
   useEffect(() => {
     if (orderBookWsRef.current) {
@@ -45,7 +43,7 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
       priceWsRef.current.close();
     }
     const orderBookWs = new WebSocket(
-      `wss://stream.binance.com:9443/ws/${selectedTicker}@depth`
+      `wss://stream.binance.com:9443/ws/${selectedTicker}@depth10`
     );
     const priceWs = new WebSocket(
       `wss://stream.binance.com:9443/ws/${selectedTicker}@ticker`
@@ -53,14 +51,22 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
 
     orderBookWs.onopen = () => {
       console.log("Order book Websocket connection opened");
+      setOrderBook({
+        bids: emptyOrderItems,
+        asks: emptyOrderItems
+      });
     };
 
     orderBookWs.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      const orderBook = JSON.parse(event.data);
+
+      // Filter to get only the first 7 levels
+      const bids = orderBook.bids.slice(0, 7);
+      const asks = orderBook.asks.slice(0, 7);
       setOrderBook({
-        bids: data.b.slice(0, 7),
-        asks: data.a.slice(0, 7).reverse(),
-      });
+        bids,
+        asks,
+      })
     };
 
     orderBookWs.onerror = (error) => {
@@ -73,6 +79,10 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
 
     priceWs.onopen = () => {
       console.log("Price WebSocket connection opened");
+      setPriceData({
+        price: "0",
+        color: "green",
+      })
     };
     priceWs.onmessage = (event) => {
       const data = JSON.parse(event.data);

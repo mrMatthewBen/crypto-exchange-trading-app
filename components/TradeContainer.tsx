@@ -21,7 +21,7 @@ const TradeContainer = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 100,
+    marginTop: 20,
     paddingHorizontal: 7,
     flexDirection: "row",
     justifyContent: "space-between",

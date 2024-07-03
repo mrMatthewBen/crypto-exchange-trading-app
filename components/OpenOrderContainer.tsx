@@ -17,28 +17,51 @@ const OpenOrderContainer = ({ openOrderItems, onFinishOrder }: props) => {
       CryptoAsset
     > = {};
 
+    const sellDetected = openOrderItems.find(item => item.type === "sell")
+
+    if (!!sellDetected) {
+      tickerMap["USDT"] = {
+        name: "USDT Tether",
+        ticker: "USDT",
+        amount: 0,
+        total: 0,
+      }
+    }
+
     openOrderItems.forEach((purchase) => {
       const ticker = purchase.ticker;
       const amount = parseFloat(purchase.amount.toString());
+      const total = parseFloat(purchase.total.toString());
 
       if (!tickerMap[ticker]) {
-        tickerMap[ticker] = {
-          name: formatNameFromTicker(ticker),
-          ticker,
-          amount,
-          total: amount,
-        };
-      }
+        if (purchase.type === "sell") {
+          tickerMap["USDT"].total += total;
+          tickerMap["USDT"].amount += total;
+        } else {
+          tickerMap[ticker] = {
+            name: formatNameFromTicker(ticker),
+            ticker,
+            amount,
+            total,
+          };
+        }
 
-      tickerMap[ticker].total += amount;
-      tickerMap[ticker].amount += amount;
+      } else {
+        if (purchase.type === "buy") {
+          tickerMap[ticker].total += total;
+          tickerMap[ticker].amount += amount;
+        } else {
+          tickerMap["USDT"].total += total;
+          tickerMap["USDT"].amount += total;
+        }
+      }
     });
 
-    const result: CryptoAsset[] = [];
+    const orderSummary: CryptoAsset[] = [];
 
     for (const tick in tickerMap) {
       const { name, ticker, amount, total } = tickerMap[tick];
-      result.push({
+      orderSummary.push({
         name,
         ticker,
         amount,
@@ -46,7 +69,9 @@ const OpenOrderContainer = ({ openOrderItems, onFinishOrder }: props) => {
       });
     }
 
-    onFinishOrder(result)
+    console.log({orderSummary , tickerMap})
+
+    onFinishOrder(orderSummary)
   };
 
   return (
@@ -72,7 +97,11 @@ const OpenOrderContainer = ({ openOrderItems, onFinishOrder }: props) => {
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: "gray",
+    borderTopWidth: 3,
     marginTop: 20,
+    minHeight: 300,
+    paddingTop: 15,
   },
   title: {
     paddingHorizontal: 8,
