@@ -22,8 +22,22 @@ const formatAmount = (number: number | string): string => {
   }).format(Number(number));
 };
 
+const formatUSD = (amount: number | string): string => {
+  if (typeof amount !== 'number') {
+    amount = parseFloat(amount);
+    if (isNaN(amount)) {
+      return '$0.00';
+    }
+  }
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
+};
+
 export {
   formatAmount,
   formatPrice,
   formatTickerPrice,
+  formatUSD,
 };

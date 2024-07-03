@@ -1,18 +1,19 @@
 import { View, Text, StyleSheet } from "react-native";
 import React from "react";
+import { OpenOrder } from "@/types/ProfileType";
 
-const OpenOrderItem = () => {
+const OpenOrderItem = ({ ticker, price, amount }: OpenOrder) => {
   return (
     <View style={styles.outerContainer}>
       <View style={styles.innerContainer}>
-        <Text style={[styles.whiteText, styles.bigText]}>BTC/USDT</Text>
+        <Text style={[styles.whiteText, styles.bigText]}>{ticker}</Text>
         <View style={styles.valueSection}>
           <Text style={[styles.grayText, styles.smallText]}>Amount</Text>
-          <Text style={[styles.whiteText, styles.smallText]}>0 / 10</Text>
+          <Text style={[styles.whiteText, styles.smallText]}>{`0 / ${amount}`}</Text>
         </View>
         <View style={styles.valueSection}>
           <Text style={[styles.grayText, styles.smallText]}>Price</Text>
-          <Text style={[styles.whiteText, styles.smallText]}>50000</Text>
+          <Text style={[styles.whiteText, styles.smallText]}>{price}</Text>
         </View>
       </View>
     </View>

@@ -1,5 +1,5 @@
 import CandleChart from "@/components/CandleChart";
-import { View, Text, SafeAreaView, StyleSheet, Dimensions, ScrollView } from "react-native";
+import { SafeAreaView, StyleSheet, Dimensions, ScrollView } from "react-native";
 import { WebView } from "react-native-webview";
 import tradeData from "@/mock-data/bitcoin/data.json";
 import { Candle } from "@/components/Candle";
@@ -17,8 +17,22 @@ import { useValues } from "react-native-redash";
 import { Line } from "react-native-svg";
 import TradeContainer from "@/components/TradeContainer";
 import OpenOrderContainer from "@/components/OpenOrderContainer";
+import CryptoPicker from "@/components/CryptoPicker";
+import { useContext, useState } from "react";
+import ProfileContext from "@/contexts/ProfileContext";
+import { CryptoAsset, OpenOrder } from "@/types/ProfileType";
 
 const Trade = () => {
+  const context = useContext(ProfileContext);
+
+  if (!context) {
+    throw new Error("must use ProfileContext");
+  }
+
+  const { state, dispatch } = context;
+
+  const [ticker, setTicker] = useState<string>(state.selectedCrypto);
+
   // const [x, y, state] = useValues(0, 0, State.UNDETERMINED);
   // const gestureHandler = onGestureEvent({x, y, state})
 
@@ -65,9 +79,22 @@ const Trade = () => {
   };
   const domain = getDomain(candles);
 
+  const handleTickerChange = (tickerChange: string) => {
+    setTicker(tickerChange);
+    dispatch({ type: "UPDATE_SELECTED_CRYPTO", payload: tickerChange });
+  };
+
+  const handleFinishOrder = (orderSummary: CryptoAsset[]) => {
+    dispatch({ type: "ADD_CRYPTO_ASSET", payload: orderSummary });
+    dispatch({ type: "REMOVE_OPEN_ORDER" });
+  };
+
+  const openOrderItems: OpenOrder[] = state.openOrders;
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0f0f0f" }}>
       <SafeAreaView style={{ flex: 1 }}>
+        <CryptoPicker name={ticker} onTickerChange={handleTickerChange} />
         <ScrollView>
           {/* <Text>Trade</Text>
           <View>
@@ -88,7 +115,10 @@ const Trade = () => {
           </View> */}
           {/* Trade Input Section */}
           <TradeContainer />
-          <OpenOrderContainer />
+          <OpenOrderContainer
+            openOrderItems={openOrderItems}
+            onFinishOrder={handleFinishOrder}
+          />
         </ScrollView>
       </SafeAreaView>
     </GestureHandlerRootView>

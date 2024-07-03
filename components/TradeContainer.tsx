@@ -6,6 +6,7 @@ import TradeInputForm from "./TradeInputForm";
 const TradeContainer = () => {
   const [copiedPrice, setCopiedPrice] = useState<string>('0')
 
+  // TODO: already copy the price but missing new total calculation
   const handleCopyPrice = (price: string) => {
     setCopiedPrice(price)
   }

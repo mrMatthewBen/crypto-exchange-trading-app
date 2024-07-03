@@ -5,26 +5,21 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { OrderType } from "@/constants/orderTypes";
-import { TouchableOpacity, TouchableWithoutFeedback } from "react-native-gesture-handler";
+import {
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from "react-native-gesture-handler";
+import ProfileContext from "@/contexts/ProfileContext";
+import { formatUSD } from "@/utils/formatPrice";
+import { formatCryptoNameOnly } from "@/utils/formatText";
 
 interface TradeInputFormProps {
   copiedPrice: string;
 }
-
-const orderOptions = [
-  {
-    label: "Limit Order",
-    value: OrderType.LIMIT,
-  },
-  {
-    label: "Market Order",
-    value: OrderType.MARKET,
-  },
-];
 
 const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
   const [price, setPrice] = useState<string>("0");
@@ -32,7 +27,19 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
   const [totalAmount, setTotalAmount] = useState<string>("");
   const [isUserInput, setIsUserInput] = useState<boolean>(false);
   const [isBuyToggle, setIsBuyToggle] = useState<boolean>(true);
-  const [selectedOrder, setSelectedOrder] = useState<string>(OrderType.LIMIT);
+
+  const context = useContext(ProfileContext);
+
+  if (!context) {
+    throw new Error("must use ProfileContext");
+  }
+
+  const { state, dispatch } = context;
+
+  const availableUsdAmount =
+    state.cryptoAssets?.find((asset) => asset.ticker === "USDT")?.total || 0;
+  const ticker = state.selectedCrypto;
+  const cryptoName = formatCryptoNameOnly(ticker);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,7 +47,7 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
         const priceResponse = await axios.get(
           "https://api.binance.com/api/v3/ticker/price",
           {
-            params: { symbol: "BTCUSDT" },
+            params: { symbol: ticker },
           }
         );
 
@@ -51,10 +58,13 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
     };
 
     fetchData();
-  }, []);
+  }, [ticker]);
 
   useEffect(() => {
     setPrice(copiedPrice);
+
+    const newTotalAmountCopied = parseFloat(copiedPrice) * parseFloat(cryptoAmount)
+    setTotalAmount(newTotalAmountCopied.toString())
   }, [copiedPrice]);
 
   useEffect(() => {
@@ -98,19 +108,85 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
     calcTotalFromTotal(text);
   };
 
-  console.log({isBuyToggle})
+  const showInsufficientAlert = () => {
+    Alert.alert(
+      "Insufficient Amount",
+      "You do not have enough funds to complete this transaction",
+      [
+        {
+          text: "OK",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const showAmountNotInputtedAlert = () => {
+    Alert.alert(
+      "Amount Not Inputted",
+      "Make sure to input the amount",
+      [
+        {
+          text: "OK",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleCryptoBuySell = () => {
+    if (isBuyToggle) {
+      const totalAmountNum = parseFloat(totalAmount)
+      if (totalAmountNum > availableUsdAmount) showInsufficientAlert();
+      if (totalAmountNum === 0 || totalAmount === "") showAmountNotInputtedAlert();
+      else {
+        const updatedUsdtAmount = availableUsdAmount - parseFloat(totalAmount);
+        dispatch({
+          type: "ADD_OPEN_ORDER",
+          payload: {
+            ticker,
+            price,
+            amount: cryptoAmount,
+          },
+        });
+        dispatch({
+          type: "UPDATE_USDT_AMOUNT",
+          payload: {
+            name: "USDT Tether",
+            ticker: "USDT",
+            amount: updatedUsdtAmount,
+            total: updatedUsdtAmount,
+          },
+        });
+        setTotalAmount("");
+        setCryptoAmount("");
+      }
+    }
+  };
 
   return (
     <View style={styles.mainContainer}>
       <View style={styles.topContainer}>
-        <View style={{ flexDirection: "row"}}>
+        <View style={{ flexDirection: "row" }}>
           <TouchableWithoutFeedback onPress={() => setIsBuyToggle(true)}>
-            <View style={[styles.buySellToggle, {backgroundColor: isBuyToggle ? "green" : "#333b3d"}]}>
+            <View
+              style={[
+                styles.buySellToggle,
+                { backgroundColor: isBuyToggle ? "green" : "#333b3d" },
+              ]}
+            >
               <Text style={styles.smallFont}>Buy</Text>
             </View>
           </TouchableWithoutFeedback>
           <TouchableWithoutFeedback onPress={() => setIsBuyToggle(false)}>
-            <View style={[styles.buySellToggle, {backgroundColor: !isBuyToggle ? "red" : "#333b3d"}]}>
+            <View
+              style={[
+                styles.buySellToggle,
+                { backgroundColor: !isBuyToggle ? "red" : "#333b3d" },
+              ]}
+            >
               <Text style={styles.smallFont}>Sell</Text>
             </View>
           </TouchableWithoutFeedback>
@@ -165,12 +241,19 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
         <View>{/* TODO: create percentage picker */}</View>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={styles.smallFont}>Available</Text>
-          <Text style={styles.smallFont}>USD 0</Text>
+          <Text style={styles.smallFont}>{formatUSD(availableUsdAmount)}</Text>
         </View>
       </View>
-      <TouchableOpacity>
-        <View style={[styles.buySellButton, {backgroundColor: isBuyToggle ? "green" : "red"}]}>
-          <Text style={styles.mediumFont}>{`${isBuyToggle ? "Buy BTC" : "Sell BTC"}`}</Text>
+      <TouchableOpacity onPress={handleCryptoBuySell}>
+        <View
+          style={[
+            styles.buySellButton,
+            { backgroundColor: isBuyToggle ? "green" : "red" },
+          ]}
+        >
+          <Text style={styles.mediumFont}>{`${
+            isBuyToggle ? `Buy ${cryptoName}` : `Sell ${cryptoName}`
+          }`}</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -189,9 +272,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: "60%",
   },
-  // buySellToggleWrapper: {
-  //   flexDirection: "row",
-  // },
   amountTotalWrapper: {
     flexDirection: "row",
     justifyContent: "space-between",

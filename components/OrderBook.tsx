@@ -1,13 +1,27 @@
-import { formatAmount, formatPrice, formatTickerPrice } from "@/utils/formatPrice";
-import axios from "axios";
-import React, { useEffect, useState } from "react";
+import {
+  formatAmount,
+  formatPrice,
+  formatTickerPrice,
+} from "@/utils/formatPrice";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import ProfileContext from "@/contexts/ProfileContext";
 
 interface OrderBookProps {
   onCopyPrice: (price: string) => void;
 }
 
 const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
+  const context = useContext(ProfileContext);
+
+  if (!context) {
+    throw new Error("must use ProfileContext");
+  }
+
+  const { state } = context;
+
+  const selectedTicker = state.selectedCrypto.toLowerCase();
+
   const [orderBook, setOrderBook] = useState<{
     bids: string[][];
     asks: string[][];
@@ -18,56 +32,45 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
   }>({ price: "", color: "black" });
   const [priceChangeData, setPriceChangeData] = useState<number>(0);
 
+  const orderBookWsRef = useRef<WebSocket | null>(null);
+  const priceWsRef = useRef<WebSocket | null>(null);
+
+  console.log({selectedTicker, orderBook, priceData})
+
   useEffect(() => {
-    // const fetchInitialSnapshot = async () => {
-    //   try {
-    //     const response = await axios.get(
-    //       "https://api.binance.com/api/v3/depth",
-    //       {
-    //         params: { symbol: "BTCUSDT", limit: 7 },
-    //       }
-    //     );
-    //     setOrderBook({
-    //       bids: response.data.bids.slice(0, 7),
-    //       asks: response.data.asks.slice(0, 7),
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching initial snapshot:", error);
-    //   }
-    // };
+    if (orderBookWsRef.current) {
+      orderBookWsRef.current.close();
+    }
+    if (priceWsRef.current) {
+      priceWsRef.current.close();
+    }
+    const orderBookWs = new WebSocket(
+      `wss://stream.binance.com:9443/ws/${selectedTicker}@depth`
+    );
+    const priceWs = new WebSocket(
+      `wss://stream.binance.com:9443/ws/${selectedTicker}@ticker`
+    );
 
-    // fetchInitialSnapshot();
-
-    const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@depth");
-
-    ws.onopen = () => {
-      console.log("Websocket connection opened");
+    orderBookWs.onopen = () => {
+      console.log("Order book Websocket connection opened");
     };
 
-    ws.onmessage = (event) => {
+    orderBookWs.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      //   setOrderBook((prevOrderBook) => {
-      //     const updatedBids = [...prevOrderBook.bids, ...data.b].slice(0, 7);
-      //     const updatedAsks = [...prevOrderBook.asks, ...data.a].slice(0, 7);
-      //     return { bids: updatedBids, asks: updatedAsks };
-      //   });
       setOrderBook({
         bids: data.b.slice(0, 7),
         asks: data.a.slice(0, 7).reverse(),
       });
     };
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error", error);
+    orderBookWs.onerror = (error) => {
+      console.error("Order book WebSocket error", error);
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed");
+    orderBookWs.onclose = () => {
+      console.log("Order book WebSocket connection closed");
     };
 
-    const priceWs = new WebSocket(
-      "wss://stream.binance.com:9443/ws/btcusdt@ticker"
-    );
     priceWs.onopen = () => {
       console.log("Price WebSocket connection opened");
     };
@@ -76,11 +79,12 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
       const newPrice = data.c;
       const priceChange = parseFloat(data.p);
       //   TODO: still need to figure out price change color
-      const priceColor = priceChange > priceChangeData ? "green" : "red";
-      setPriceChangeData(priceChange);
+      // const priceColor = priceChange > priceChangeData ? "green" : "red";
+      // setPriceChangeData(priceChange);
       setPriceData({
         price: newPrice,
-        color: priceColor,
+        // color: priceColor,
+        color: "green",
       });
     };
     priceWs.onerror = (error) => {
@@ -90,11 +94,19 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
       console.log("Price WebSocket connection closed");
     };
 
+    orderBookWsRef.current = orderBookWs;
+    priceWsRef.current = priceWs;
+
     // Cleanup function to close the WebSocket connection when the component unmounts
     return () => {
-      ws.close();
+      if (orderBookWsRef.current) {
+        orderBookWsRef.current.close();
+      }
+      if (priceWsRef.current) {
+        priceWsRef.current.close();
+      }
     };
-  }, []);
+  }, [selectedTicker]);
 
   return (
     <View style={styles.section}>
@@ -114,7 +126,6 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
         ))}
       </View>
       {/* Latest Price Section */}
-      {/* <Text style={styles.smallFont}>{formatAmount(price)}</Text> */}
       <TouchableOpacity
         onPress={() => onCopyPrice(formatTickerPrice(priceData.price))}
       >

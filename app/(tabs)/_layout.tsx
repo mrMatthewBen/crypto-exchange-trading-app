@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 
 import { icons } from "../../constants"
 import { StatusBar } from "expo-status-bar";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 
 interface TabIconProps {
   icon: ImageSourcePropType;
@@ -33,7 +34,7 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => {
 
 const TabsLayout = () => {
     return (
-      <>
+      <ProfileProvider>
         <Tabs
           screenOptions={{
             tabBarShowLabel: false,
@@ -124,7 +125,7 @@ const TabsLayout = () => {
           />
         </Tabs>
         <StatusBar backgroundColor="#161622" style="light" />
-      </>
+      </ProfileProvider>
     );
   };
 
