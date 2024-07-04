@@ -44,11 +44,6 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
   const availableSelectedCryptoAmount = selectedCrypto?.amount || 0;
   const availableSelectedCryptoTotal = selectedCrypto?.total || 0;
 
-  console.log(state.openOrders, "openOrder", {
-    availableSelectedCryptoAmount,
-    ticker,
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -175,7 +170,6 @@ const TradeInputForm = ({ copiedPrice }: TradeInputFormProps) => {
         showAlertForInvalidAmount(totalAmount, availableUsdAmount);
       } else {
         const updatedCryptoAmount = availableUsdAmount - parseFloat(totalAmount);
-        // console.log({updatedCryptoAmount})
         processOrder(updatedCryptoAmount, updatedCryptoAmount, "buy", "USDT");
       }
     } else {
@@ -338,7 +332,6 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   buySellToggle: {
-    // TODO: need to change styling to dynamic
     width: 131,
     height: 30,
     justifyContent: "center",

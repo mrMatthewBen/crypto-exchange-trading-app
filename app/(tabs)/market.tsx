@@ -5,7 +5,6 @@ import CryptoCard from "@/components/CryptoCard";
 import ProfileContext from "@/contexts/ProfileContext";
 import { useRouter } from "expo-router";
 
-// TODO: mock data remove this, and change to api call
 const cryptosData = [
   {
     id: 1,
@@ -31,17 +30,6 @@ const cryptosData = [
       },
     },
   },
-  // {
-  //   id: 3,
-  //   name: "Tether USDt",
-  //   symbol: "USDT",
-  //   quote: {
-  //     USD: {
-  //       price: "0.9990920565344819",
-  //       percent_change_24h: -0.0565876,
-  //     },
-  //   },
-  // },
 ];
 
 const Market = () => {
@@ -62,9 +50,7 @@ const Market = () => {
 
   return (
     <SafeAreaView style={style.container}>
-      <View style={style.textInputContainer}>
-        <TextInput style={style.textInput} />
-      </View>
+      <Text style={style.screenTitle}>Market</Text>
       <ScrollView>
         {cryptosData?.map((crypto) => (
           <CryptoCard
@@ -87,16 +73,11 @@ const style = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0f0f0f",
   },
-  textInputContainer: {
+  screenTitle: {
     padding: 10,
-    backgroundColor: "gray",
-  },
-  textInput: {
-    padding: 2,
-    borderRadius: 3,
-    borderColor: "gray",
-    backgroundColor: "white",
-  },
+    fontSize: 20,
+    color: "white",
+  }
 });
 
 export default Market;

@@ -87,13 +87,8 @@ const OrderBook = ({ onCopyPrice }: OrderBookProps) => {
     priceWs.onmessage = (event) => {
       const data = JSON.parse(event.data);
       const newPrice = data.c;
-      const priceChange = parseFloat(data.p);
-      //   TODO: still need to figure out price change color
-      // const priceColor = priceChange > priceChangeData ? "green" : "red";
-      // setPriceChangeData(priceChange);
       setPriceData({
         price: newPrice,
-        // color: priceColor,
         color: "green",
       });
     };

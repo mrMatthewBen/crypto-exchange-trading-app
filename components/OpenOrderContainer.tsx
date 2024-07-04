@@ -69,8 +69,6 @@ const OpenOrderContainer = ({ openOrderItems, onFinishOrder }: props) => {
       });
     }
 
-    console.log({orderSummary , tickerMap})
-
     onFinishOrder(orderSummary)
   };
 
